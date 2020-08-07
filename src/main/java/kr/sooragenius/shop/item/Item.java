@@ -13,7 +13,7 @@ import java.util.List;
 @Entity
 @Getter
 
-public class Item extends AbstractAuditable {
+public class Item {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ITEM_ID")
     private Long id;
@@ -30,6 +30,9 @@ public class Item extends AbstractAuditable {
 
     @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "item")
     private List<Review> reviews = new ArrayList<>();
+
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "item")
+    private List<ItemOption> itemOptions = new ArrayList<>();
 
     public static Item of(ItemDTO.Request request, Category category) {
         Item item = new Item();

@@ -1,76 +1,83 @@
-package kr.sooragenius.shop.review.service;
+package kr.sooragenius.shop.review.service.infra;
 
 import kr.sooragenius.shop.item.Item;
 import kr.sooragenius.shop.item.dto.ItemDTO;
 import kr.sooragenius.shop.category.Category;
 import kr.sooragenius.shop.category.dto.CategoryDTO;
 import kr.sooragenius.shop.category.service.infra.CategoryRepository;
+import kr.sooragenius.shop.item.dto.ItemOptionDTO;
 import kr.sooragenius.shop.item.service.infra.ItemRepository;
 import kr.sooragenius.shop.review.Review;
 import kr.sooragenius.shop.review.dto.ReviewDTO;
+import kr.sooragenius.shop.review.enums.ScoreEnums;
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.BDDMockito.given;
 
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-class ReviewServiceTest {
+class ReviewRepositoryTest {
     private final ItemRepository itemRepository;
     private final CategoryRepository categoryRepository;
-    private final ReviewService reviewService;
+    private final ReviewRepository reviewRepository;
     private final EntityManager entityManager;
 
     @Test
     @Transactional
-    void addItem() {
-        Long categoryId = addTopCategory();
-        Long itemId = addKakaoItem(categoryId);
+    @DisplayName("상품의 리뷰 추가")
+    void addReview() {
+        //given
+        Category category = addTopCategory();
+        Item item = addKakaoItem(category);
 
-        ReviewDTO.Request nice = ReviewDTO.Request.builder().itemId(itemId).contents("nice").build();
-        ReviewDTO.Request bad = ReviewDTO.Request.builder().itemId(itemId).contents("bad").build();
-        ReviewDTO.Request normal = ReviewDTO.Request.builder().itemId(itemId).contents("normal").build();
+        ReviewDTO.Request niceRequest = ReviewDTO.Request.builder().contents("nice").score(ScoreEnums.GOOD).build();
+        ReviewDTO.Request badRequest = ReviewDTO.Request.builder().contents("bad").score(ScoreEnums.BAD).build();
+        ReviewDTO.Request normalRequest = ReviewDTO.Request.builder().contents("normal").score(ScoreEnums.NORMAL).build();
 
-        Long niceReviewId = reviewService.addReview(nice);
-        Long badReviewId = reviewService.addReview(bad);
-        Long normalReviewId = reviewService.addReview(normal);
+        Review nice = Review.of(niceRequest, item);
+        Review bad = Review.of(badRequest, item);
+        Review normal = Review.of(normalRequest, item);
+
+        // when
+        Long niceReviewId = reviewRepository.save(nice).getId();
+        Long badReviewId = reviewRepository.save(bad).getId();
+        Long normalReviewId = reviewRepository.save(normal).getId();
 
         flush();
 
+        // then
         Map<Long, ReviewDTO.Request> itemMaps = new HashMap<>();
-        itemMaps.put(niceReviewId, nice);
-        itemMaps.put(badReviewId, bad);
-        itemMaps.put(normalReviewId, normal);
+        itemMaps.put(niceReviewId, niceRequest);
+        itemMaps.put(badReviewId, badRequest);
+        itemMaps.put(normalReviewId, normalRequest);
 
-        itemMaps.entrySet().stream().forEach(item -> {
-            Long key = item.getKey();
-            ReviewDTO.Request value = item.getValue();
+        itemMaps.entrySet().stream().forEach(entry -> {
+            Long key = entry.getKey();
+            ReviewDTO.Request value = entry.getValue();
 
-            ReviewDTO.Response byId = reviewService.findById(key);
+            Review byId = reviewRepository.findById(key).get();
 
             assertEquals(key, byId.getId());
             assertEquals(value.getContents(), byId.getContents());
-            assertEquals(itemId, byId.getItemId());
+            assertEquals(item.getId(), byId.getItem().getId());
+            assertEquals(value.getScore(), byId.getScore());
         });
     }
-    private Long addTopCategory() {
-        return categoryRepository.save(Category.of(CategoryDTO.Request.builder().name("TOP").build())).getId();
+    private Category addTopCategory() {
+        return categoryRepository.save(Category.of(CategoryDTO.Request.builder().name("TOP").build()));
     }
-    private Long addKakaoItem(Long categoryId) {
-        Category category = categoryRepository.findById(categoryId).get();
-
-        return itemRepository.save(Item.of(ItemDTO.Request.builder().name("Kakao").build(), category)).getId();
+    private Item addKakaoItem(Category category) {
+        return itemRepository.save(Item.of(ItemDTO.Request.builder().name("Kakao").price(1000L).discount(100L).build(), category));
     }
     private void flush() {
         entityManager.flush();

@@ -1,6 +1,7 @@
 package kr.sooragenius.shop.review;
 
 import kr.sooragenius.shop.item.Item;
+import kr.sooragenius.shop.item.ItemOption;
 import kr.sooragenius.shop.review.dto.ReviewDTO;
 import kr.sooragenius.shop.review.enums.ScoreEnums;
 import lombok.Getter;
@@ -18,9 +19,10 @@ public class Review {
 
     @Enumerated(EnumType.STRING)
     private ScoreEnums score;   // 점수
-    private int like;           // 좋아요
+    private int likeCount;      // 좋아요
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ITEM_ID", referencedColumnName = "ITEM_ID")
     private Item item;
 
     public static Review of(ReviewDTO.Request request, Item item) {

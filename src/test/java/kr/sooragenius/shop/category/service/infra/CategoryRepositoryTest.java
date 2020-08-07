@@ -1,4 +1,4 @@
-package kr.sooragenius.shop.category.service;
+package kr.sooragenius.shop.category.service.infra;
 
 import kr.sooragenius.shop.category.Category;
 import kr.sooragenius.shop.category.dto.CategoryDTO;
@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-class CategoryServiceTest {
+class CategoryRepositoryTest {
     private final CategoryRepository categoryRepository;
     private final EntityManager entityManager;
 

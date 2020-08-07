@@ -1,10 +1,13 @@
-package kr.sooragenius.shop.item.service;
+package kr.sooragenius.shop.item.service.infra;
 
+import kr.sooragenius.shop.item.Item;
 import kr.sooragenius.shop.item.dto.ItemDTO;
 import kr.sooragenius.shop.category.Category;
 import kr.sooragenius.shop.category.dto.CategoryDTO;
 import kr.sooragenius.shop.category.service.infra.CategoryRepository;
+import kr.sooragenius.shop.item.service.ItemService;
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,44 +25,53 @@ import static org.mockito.BDDMockito.given;
 
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-class ItemServiceTest {
+class ItemRepositoryTest {
     private final CategoryRepository categoryRepository;
-    private final ItemService itemService;
+    private final ItemRepository itemRepository;
     private final EntityManager entityManager;
 
     @Test
     @Transactional
+    @DisplayName("상품 저장")
     void addItem() {
-        Long categoryId = addTopCategory();
+        // given
+        Category category = addTopCategory();
 
-        ItemDTO.Request itemKakao = ItemDTO.Request.builder().categoryId(categoryId).name("Kakao").build();
-        ItemDTO.Request itemClock = ItemDTO.Request.builder().categoryId(categoryId).name("Clock").build();
-        ItemDTO.Request itemPen = ItemDTO.Request.builder().categoryId(categoryId).name("Pen").build();
+        ItemDTO.Request itemKakaoRequest = ItemDTO.Request.builder().name("Kakao").price(1000L).discount(100L).build();
+        ItemDTO.Request itemClockRequest = ItemDTO.Request.builder().name("Clock").price(1000L).discount(100L).build();
+        ItemDTO.Request itemPenRequest = ItemDTO.Request.builder().name("Pen").price(1000L).discount(100L).build();
 
-        Long kakaoId = itemService.addItem(itemKakao);
-        Long clockId = itemService.addItem(itemClock);
-        Long penId = itemService.addItem(itemPen);
+        Item itemKakao = Item.of(itemKakaoRequest, category);
+        Item itemClock = Item.of(itemClockRequest, category);
+        Item itemPen = Item.of(itemPenRequest, category);
+
+        // when
+        Long kakaoId = itemRepository.save(itemKakao).getId();
+        Long clockId = itemRepository.save(itemClock).getId();
+        Long penId = itemRepository.save(itemPen).getId();
 
         flush();
 
+        // then
         Map<Long, ItemDTO.Request> itemMaps = new HashMap<>();
-        itemMaps.put(kakaoId, itemKakao);
-        itemMaps.put(clockId, itemClock);
-        itemMaps.put(penId, itemPen);
+        itemMaps.put(kakaoId, itemKakaoRequest);
+        itemMaps.put(clockId, itemClockRequest);
+        itemMaps.put(penId, itemPenRequest);
 
         itemMaps.entrySet().stream().forEach(item -> {
             Long key = item.getKey();
             ItemDTO.Request value = item.getValue();
 
-            ItemDTO.Response byId = itemService.findById(key);
+            Item byId = itemRepository.findById(key).get();
 
             assertEquals(key, byId.getId());
             assertEquals(value.getName(), byId.getName());
-            assertEquals(categoryId, byId.getCategoryId());
+            assertEquals(category.getId(), byId.getCategory().getId());
+            assertEquals(900L, byId.getDiscountPrice());
         });
     }
-    private Long addTopCategory() {
-        return categoryRepository.save(Category.of(CategoryDTO.Request.builder().name("TOP").build())).getId();
+    private Category addTopCategory() {
+        return categoryRepository.save(Category.of(CategoryDTO.Request.builder().name("TOP").build()));
     }
     private void flush() {
         entityManager.flush();
