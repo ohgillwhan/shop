@@ -14,8 +14,8 @@ public class ItemDTO {
         private String name;
         private String contents;
         private String deliveryDescription;
-        private Long price;
-        private Long discount;
+        private Long amount;
+        private Long discountAmount;
     }
     @Data
     @NoArgsConstructor @Builder @AllArgsConstructor
@@ -25,9 +25,9 @@ public class ItemDTO {
         private String name;
         private String contents;
         private String deliveryDescription;
-        private Long price;
-        private Long discount;
-        private Long discountPrice;
+        private Long amount;
+        private Long discountAmount;
+        private Long payAmount;
 
         public static Response of(Item item) {
             Response response = new Response();
@@ -37,9 +37,9 @@ public class ItemDTO {
             response.name = item.getName();
             response.contents = item.getContents();
             response.deliveryDescription = item.getDeliveryDescription();
-            response.price = item.getPrice();
-            response.discount = item.getDiscount();
-            response.discountPrice = item.getDiscountPrice();
+            response.amount = item.getAmount();
+            response.discountAmount = item.getDiscountAmount();
+            response.payAmount = item.getPayAmount();
 
             return response;
         }

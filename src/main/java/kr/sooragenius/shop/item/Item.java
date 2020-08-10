@@ -20,9 +20,9 @@ public class Item {
     private String name;
     private String contents;
     private String deliveryDescription; // 배달안내문
-    private Long price; // 원가
-    private Long discount; // 할인
-    private Long discountPrice; // 할인된 가격
+    private Long amount; // 원가
+    private Long discountAmount; // 할인
+    private Long payAmount; // 할인된 가격
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(referencedColumnName = "CATEGORY_ID", name = "CATEGORY_ID")
@@ -40,9 +40,9 @@ public class Item {
         item.name = request.getName();
         item.contents = request.getContents();
         item.deliveryDescription = request.getDeliveryDescription();
-        item.price = request.getPrice();
-        item.discount = request.getDiscount();
-        item.discountPrice = request.getPrice() - request.getDiscount();
+        item.amount = request.getAmount();
+        item.discountAmount = request.getDiscountAmount();
+        item.payAmount = request.getAmount() - request.getDiscountAmount();
 
         item.category = category;
 

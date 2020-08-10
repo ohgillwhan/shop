@@ -37,9 +37,9 @@ class ItemRepositoryTest {
         // given
         Category category = addTopCategory();
 
-        ItemDTO.Request itemKakaoRequest = ItemDTO.Request.builder().name("Kakao").price(1000L).discount(100L).build();
-        ItemDTO.Request itemClockRequest = ItemDTO.Request.builder().name("Clock").price(1000L).discount(100L).build();
-        ItemDTO.Request itemPenRequest = ItemDTO.Request.builder().name("Pen").price(1000L).discount(100L).build();
+        ItemDTO.Request itemKakaoRequest = ItemDTO.Request.builder().name("Kakao").amount(1000L).discountAmount(100L).build();
+        ItemDTO.Request itemClockRequest = ItemDTO.Request.builder().name("Clock").amount(1000L).discountAmount(100L).build();
+        ItemDTO.Request itemPenRequest = ItemDTO.Request.builder().name("Pen").amount(1000L).discountAmount(100L).build();
 
         Item itemKakao = Item.of(itemKakaoRequest, category);
         Item itemClock = Item.of(itemClockRequest, category);
@@ -67,7 +67,7 @@ class ItemRepositoryTest {
             assertEquals(key, byId.getId());
             assertEquals(value.getName(), byId.getName());
             assertEquals(category.getId(), byId.getCategory().getId());
-            assertEquals(900L, byId.getDiscountPrice());
+            assertEquals(900L, byId.getPayAmount());
         });
     }
     private Category addTopCategory() {

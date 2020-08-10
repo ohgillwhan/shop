@@ -77,7 +77,7 @@ class ReviewRepositoryTest {
         return categoryRepository.save(Category.of(CategoryDTO.Request.builder().name("TOP").build()));
     }
     private Item addKakaoItem(Category category) {
-        return itemRepository.save(Item.of(ItemDTO.Request.builder().name("Kakao").price(1000L).discount(100L).build(), category));
+        return itemRepository.save(Item.of(ItemDTO.Request.builder().name("Kakao").amount(1000L).discountAmount(100L).build(), category));
     }
     private void flush() {
         entityManager.flush();

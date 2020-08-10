@@ -38,7 +38,7 @@ class ItemOptionRepositoryTest {
         // given
         Category category = addTopCategory();
 
-        ItemDTO.Request itemKakaoRequest = ItemDTO.Request.builder().name("Kakao").price(1000L).discount(100L).build();
+        ItemDTO.Request itemKakaoRequest = ItemDTO.Request.builder().name("Kakao").amount(1000L).discountAmount(100L).build();
         Item itemKakao = Item.of(itemKakaoRequest, category);
 
         Long kakaoId = itemRepository.save(itemKakao).getId();
