@@ -23,6 +23,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.annotation.Commit;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +48,37 @@ class ItemOrderRepositoryTest {
     private final EntityManager entityManager;
 
 
+
+    @DisplayName("이벤트 실행테스트")
+    @Test
+    @Transactional
+    @Commit
+    public void eventTest() throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException {
+
+        // given
+        Category category = addTopCategory();
+        Item item = addItem(category);
+        Member member = addMember();
+        ItemOrder itemOrder = ItemOrder.of(member);
+
+        // when
+        itemOrder.publishItemOrderEvent();
+        itemOrder = itemOrderRepository.save(itemOrder);
+
+        List<ItemOrderDetail> itemOrderDetails = Arrays.asList(
+                createItemOrderDetail(item, null, itemOrder),
+                createItemOrderDetail(item, null, itemOrder),
+                createItemOrderDetail(item, null, itemOrder)
+        );
+        ReflectionTestUtils.setField(itemOrder, "itemOrderDetails", itemOrderDetails);
+        flush();
+
+        ItemOrder itemOrder1 = itemOrderRepository.findById(itemOrder.getId()).get();
+        itemOrder1.publishItemOrderEvent();
+        itemOrder1.changeTotalAmount(1000000000);
+        itemOrder = itemOrderRepository.save(itemOrder1);
+
+    }
     @DisplayName("주문 과 이벤트 실행")
     @Test
     @Transactional

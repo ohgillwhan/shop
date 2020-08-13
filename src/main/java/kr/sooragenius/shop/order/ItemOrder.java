@@ -57,6 +57,9 @@ public class ItemOrder extends AbstractAggregateRoot<ItemOrder> {
 
         return ItemOrderDetailDTO.Response.of(itemOrderDetail);
     }
+    public void changeTotalAmount(int temp) {
+        this.totalAmount = temp;
+    }
 
     private ItemOrderDetail findById(long id) {
         return getItemOrderDetails().stream()

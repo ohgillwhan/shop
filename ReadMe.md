@@ -56,6 +56,7 @@ review에는 옵션이 필요 없다.
 핵심은
 AbstractAggregateRoot를 사용하여 이벤트를 등록하고, @Componenet, @EventListener 조합으로 이벤트 Listener를 하면 된다.  
 이벤트를 등록하면 save때 Listener가 시작이 되니 참고하자.  
+save를 실행안하면은 이벤트는 동작이 안된다.  
 
 # 7일차
 1. 재고 감소
