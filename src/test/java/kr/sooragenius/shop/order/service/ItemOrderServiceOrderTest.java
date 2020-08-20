@@ -20,8 +20,13 @@ import org.aspectj.lang.annotation.Before;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -33,6 +38,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -40,26 +46,25 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class ItemOrderServiceOrderTest {
     @Mock
     private ItemRepository itemRepository;
     @Mock
     private ItemOrderRepository itemOrderRepository;
-    @MockBean
+    @Mock
     private ItemOptionRepository itemOptionRepository;
     @Mock
     private MemberRepository memberRepository;
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
 
 
     private ItemOrderService itemOrderService;
-    private final PasswordEncoder passwordEncoder;
-    private final ApplicationEventPublisher applicationEventPublisher;
-
     @BeforeEach
-    public void beforeEach() {
+    public void setUp() {
         itemOrderService = new ItemOrderService(itemRepository, itemOrderRepository, itemOptionRepository, memberRepository, applicationEventPublisher);
     }
     @Test
@@ -94,7 +99,7 @@ class ItemOrderServiceOrderTest {
                 .build();
         // when
         when(memberRepository.findById(memberRequest.getId()))
-                .thenReturn(Optional.of(Member.of(memberRequest, passwordEncoder)));
+                .thenReturn(Optional.of(Member.of(memberRequest, passwordEncoder())));
 
         // then
         assertThatExceptionOfType(RuntimeException.class)
@@ -116,7 +121,7 @@ class ItemOrderServiceOrderTest {
                 .build();
         // when
         when(memberRepository.findById(memberRequest.getId()))
-                .thenReturn(Optional.of(Member.of(memberRequest, passwordEncoder)));
+                .thenReturn(Optional.of(Member.of(memberRequest, passwordEncoder())));
 
         // then
         assertThatExceptionOfType(RuntimeException.class)
@@ -140,7 +145,7 @@ class ItemOrderServiceOrderTest {
                 .build();
         // when
         when(memberRepository.findById(memberRequest.getId()))
-                .thenReturn(Optional.of(Member.of(memberRequest, passwordEncoder)));
+                .thenReturn(Optional.of(Member.of(memberRequest, passwordEncoder())));
         when(itemRepository.findById(1L))
                 .thenReturn(Optional.of(blackKakao));
 
@@ -148,66 +153,6 @@ class ItemOrderServiceOrderTest {
         assertThatExceptionOfType(RuntimeException.class)
                 .isThrownBy(() -> itemOrderService.order(request))
                 .withMessageContaining("존재하지 않는 옵션입니다");
-    }
-    @Test
-    @DisplayName("order - 재고부족")
-    @Transactional
-    void orderNoStockInItem() {
-        // given
-        MemberDTO.Request memberRequest = createMemberRequest();
-        Item blackKakao = createItem(1L, 1L,"blackKakao", 1000L, 100L, 0L);
-
-
-        ItemOrderDTO.Request request = ItemOrderDTO.Request.builder()
-                .memberId(memberRequest.getId())
-                .orderDetailRequests(Arrays.asList(
-                        ItemOrderDetailDTO.Request.builder().itemId(1L).optionId(1L).build()
-                ))
-                .build();
-
-        // when
-        when(memberRepository.findById(memberRequest.getId()))
-                .thenReturn(Optional.of(Member.of(memberRequest, passwordEncoder)));
-        when(itemRepository.findById(1L))
-                .thenReturn(Optional.of(blackKakao));
-        when(itemOptionRepository.findById(1L))
-                .thenReturn(Optional.of(blackKakao.getItemOptions().get(0)));
-        when(itemOptionRepository.minusStockByIdWithLock(anyLong(), anyLong()))
-                .thenReturn(0);
-
-        // then
-        assertThatExceptionOfType(RuntimeException.class)
-                .isThrownBy(() -> itemOrderService.order(request))
-                .withMessageContaining("재고가 부족합니다.");
-    }
-    @Test
-    @DisplayName("order - 재고충")
-    @Transactional
-    void orderStockExistsInItem() {
-        // given
-        MemberDTO.Request memberRequest = createMemberRequest();
-        Item blackKakao = createItem(1L, 1L,"blackKakao", 1000L, 100L, 2L);
-
-
-        ItemOrderDTO.Request request = ItemOrderDTO.Request.builder()
-                .memberId(memberRequest.getId())
-                .orderDetailRequests(Arrays.asList(
-                        ItemOrderDetailDTO.Request.builder().itemId(1L).optionId(1L).build()
-                ))
-                .build();
-
-        // when
-        when(memberRepository.findById(memberRequest.getId()))
-                .thenReturn(Optional.of(Member.of(memberRequest, passwordEncoder)));
-        when(itemRepository.findById(1L))
-                .thenReturn(Optional.of(blackKakao));
-        when(itemOptionRepository.findById(1L))
-                .thenReturn(Optional.of(blackKakao.getItemOptions().get(0)));
-        when(itemOptionRepository.minusStockByIdWithLock(anyLong(), anyLong()))
-                .thenReturn(1);
-
-        // then
-        itemOrderService.order(request);
     }
     @Test
     @DisplayName("order - 옵션없이")
@@ -231,19 +176,22 @@ class ItemOrderServiceOrderTest {
 
         // when
         when(memberRepository.findById(memberRequest.getId()))
-                .thenReturn(Optional.of(Member.of(memberRequest, passwordEncoder)));
+                .thenReturn(Optional.of(Member.of(memberRequest, passwordEncoder())));
+
         when(itemRepository.findById(1L))
                 .thenReturn(Optional.of(blackKakao));
         when(itemRepository.findById(2L))
                 .thenReturn(Optional.of(whiteKakao));
         when(itemRepository.findById(3L))
                 .thenReturn(Optional.of(pinkKakao));
+
         when(itemOptionRepository.findById(1L))
                 .thenReturn(Optional.of(blackKakao.getItemOptions().get(0)));
         when(itemOptionRepository.findById(2L))
                 .thenReturn(Optional.of(whiteKakao.getItemOptions().get(0)));
         when(itemOptionRepository.findById(3L))
                 .thenReturn(Optional.of(pinkKakao.getItemOptions().get(0)));
+
         when(itemOptionRepository.minusStockByIdWithLock(anyLong(), anyLong()))
                 .thenReturn(1);
 
@@ -251,36 +199,36 @@ class ItemOrderServiceOrderTest {
 
         // then
         assertThat(order.getTotalPayAmount())
-                .isGreaterThan(0L)
+                .isPositive()
                 .isEqualTo(blackKakao.getPayAmount() + pinkKakao.getPayAmount() + whiteKakao.getPayAmount());
 
         assertThat(order.getTotalAmount())
-                .isGreaterThan(0L)
+                .isPositive()
                 .isEqualTo(blackKakao.getAmount() + pinkKakao.getAmount() + whiteKakao.getAmount());
 
         assertThat(order.getTotalDiscountAmount())
-                .isGreaterThan(0L)
+                .isPositive()
                 .isEqualTo(blackKakao.getDiscountAmount() + pinkKakao.getDiscountAmount() + whiteKakao.getDiscountAmount());
 
         assertThat(order.getOrderDetails().size())
-                .isGreaterThan(0)
+                .isPositive()
                 .isEqualTo(request.getOrderDetailRequests().size());
 
-        order.getOrderDetails().stream().forEach(detail -> {
+        for(ItemOrderDetailDTO.ResponseFromOrder detail : order.getOrderDetails()) {
             Item item = itemRepository.findById(detail.getItemId()).get();
 
             assertThat(detail.getDiscountAmount())
-                    .isGreaterThan(0L)
+                    .isPositive()
                     .isEqualTo(item.getDiscountAmount());
 
             assertThat(detail.getPayAmount())
-                    .isGreaterThan(0L)
+                    .isPositive()
                     .isEqualTo(item.getPayAmount());
 
             assertThat(detail.getAmount())
-                    .isGreaterThan(0L)
+                    .isPositive()
                     .isEqualTo(item.getAmount());
-        });
+        }
     }
     @Test
     @DisplayName("order - 옵션 추가하여")
@@ -305,19 +253,22 @@ class ItemOrderServiceOrderTest {
 
         // when
         when(memberRepository.findById(memberRequest.getId()))
-                .thenReturn(Optional.of(Member.of(memberRequest, passwordEncoder)));
+                .thenReturn(Optional.of(Member.of(memberRequest, passwordEncoder())));
+
         when(itemRepository.findById(1L))
                 .thenReturn(Optional.of(blackKakao));
         when(itemRepository.findById(2L))
                 .thenReturn(Optional.of(whiteKakao));
         when(itemRepository.findById(3L))
                 .thenReturn(Optional.of(pinkKakao));
+
         when(itemOptionRepository.findById(1L))
                 .thenReturn(Optional.of(blackKakaoOption));
         when(itemOptionRepository.findById(2L))
                 .thenReturn(Optional.of(whiteKakao.getItemOptions().get(0)));
         when(itemOptionRepository.findById(3L))
                 .thenReturn(Optional.of(pinkKakao.getItemOptions().get(0)));
+
         when(itemOptionRepository.minusStockByIdWithLock(anyLong(), anyLong()))
                 .thenReturn(1);
 
@@ -345,13 +296,14 @@ class ItemOrderServiceOrderTest {
                 .isGreaterThan(0)
                 .isEqualTo(request.getOrderDetailRequests().size());
 
-        order.getOrderDetails().stream().forEach(detail -> {
+        for (ItemOrderDetailDTO.ResponseFromOrder detail : order.getOrderDetails()) {
             Item item = itemRepository.findById(detail.getItemId()).get();
-            System.out.println(item.getName());
+
             long discountAmount = item.getDiscountAmount();
             long payAmount = item.getPayAmount();
             long amount = item.getAmount();
-            if(detail.getOptionId() != null && detail.getOptionId() > 0L) {
+
+            if (detail.getOptionId() != null && detail.getOptionId() > 0L) {
                 ItemOption itemOption = itemOptionRepository.findById(detail.getOptionId()).get();
 
                 payAmount += itemOption.getPremium();
@@ -369,7 +321,7 @@ class ItemOrderServiceOrderTest {
             assertThat(detail.getAmount())
                     .isGreaterThan(0L)
                     .isEqualTo(amount);
-        });
+        }
     }
 
     private MemberDTO.Request createMemberRequest() {
@@ -412,7 +364,6 @@ class ItemOrderServiceOrderTest {
         return itemOption;
     }
 
-    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }

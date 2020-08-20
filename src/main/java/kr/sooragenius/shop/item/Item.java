@@ -49,4 +49,12 @@ public class Item {
         item.itemOptions.add(ItemOption.createNoneOption(item, request.getStock()));
         return item;
     }
+    public long getNoneOptionId() throws RuntimeException{
+        ItemOption itemOption = getItemOptions().stream()
+                .filter(item -> item.isNoneOptionAt())
+                .findFirst()
+                .orElseThrow(() ->new RuntimeException("비옵션이 없습니다."));
+
+        return itemOption.getId();
+    }
 }

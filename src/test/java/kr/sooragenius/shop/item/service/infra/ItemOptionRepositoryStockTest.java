@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest
+@DataJpaTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class ItemOptionRepositoryStockTest {
     private final CategoryRepository categoryRepository;
@@ -37,15 +38,12 @@ class ItemOptionRepositoryStockTest {
         Category category = addTopCategory();
 
         ItemDTO.Request itemKakaoRequest = ItemDTO.Request.builder().name("Kakao").amount(1000L).discountAmount(100L).stock(1L).build();
-        Item itemKakao = Item.of(itemKakaoRequest, category);
 
-        Long kakaoId = itemRepository.save(itemKakao).getId();
-        flush();
+        Item itemKakao = itemRepository.save(Item.of(itemKakaoRequest, category));
         // when
-        Item item = itemRepository.findById(kakaoId).get();
-        ItemOption itemOption = item.getItemOptions().get(0);
+        Item item = itemRepository.findById(itemKakao.getId()).get();
 
-        int updatedCount = itemOptionRepository.minusStockByIdWithLock(itemOption.getId(), 2L);
+        int updatedCount = itemOptionRepository.minusStockByIdWithLock(item.getNoneOptionId(), 2L);
 
         // then
         assertThat(updatedCount)
@@ -60,15 +58,13 @@ class ItemOptionRepositoryStockTest {
         Category category = addTopCategory();
 
         ItemDTO.Request itemKakaoRequest = ItemDTO.Request.builder().name("Kakao").amount(1000L).discountAmount(100L).stock(2L).build();
-        Item itemKakao = Item.of(itemKakaoRequest, category);
 
-        Long kakaoId = itemRepository.save(itemKakao).getId();
+        Item item = itemRepository.save(Item.of(itemKakaoRequest, category));
         flush();
         // when
-        Item item = itemRepository.findById(kakaoId).get();
-        ItemOption itemOption = item.getItemOptions().get(0);
+        item = itemRepository.findById(item.getId()).get();
 
-        int updatedCount = itemOptionRepository.minusStockByIdWithLock(itemOption.getId(), 2L);
+        int updatedCount = itemOptionRepository.minusStockByIdWithLock(item.getNoneOptionId(), 2L);
 
         // then
         assertThat(updatedCount)

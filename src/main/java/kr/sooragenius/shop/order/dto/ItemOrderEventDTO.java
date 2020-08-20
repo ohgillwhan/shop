@@ -19,7 +19,7 @@ public class ItemOrderEventDTO {
             NewItemOrder newItemOrder = new NewItemOrder();
             newItemOrder.itemId = detailRequest.getItemId();
             newItemOrder.optionId = detailRequest.getOptionId();
-            newItemOrder.stock = 1;
+            newItemOrder.stock = detailRequest.getStock();
 
             return newItemOrder;
         }

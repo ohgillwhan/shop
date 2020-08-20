@@ -17,6 +17,7 @@ public class ItemOrderDTO {
     }
     @Data
     public static class Response {
+        private long id;
         private String memberId;
         private long totalAmount;
         private long totalDiscountAmount;
@@ -26,6 +27,7 @@ public class ItemOrderDTO {
         public static Response of(ItemOrder itemOrder, List<ItemOrderDetail> orderDetails) {
             Response response = new Response();
 
+            response.id = itemOrder.getId();
             response.memberId = itemOrder.getMember().getId();
             response.totalAmount = itemOrder.getTotalAmount();
             response.totalPayAmount = itemOrder.getTotalPayAmount();

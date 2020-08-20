@@ -12,6 +12,7 @@ import kr.sooragenius.shop.member.dto.MemberDTO;
 import kr.sooragenius.shop.member.enums.MemberAuthority;
 import kr.sooragenius.shop.member.service.infra.MemberRepository;
 import kr.sooragenius.shop.order.ItemOrder;
+import kr.sooragenius.shop.order.ItemOrderDetail;
 import kr.sooragenius.shop.order.dto.ItemOrderDTO;
 import kr.sooragenius.shop.order.dto.ItemOrderDetailDTO;
 import kr.sooragenius.shop.order.dto.ItemOrderEventDTO;
@@ -34,6 +35,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.text.html.Option;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Optional;
@@ -116,11 +118,15 @@ class ItemOrderServiceCancelTest {
         ItemOption whiteNoneOption = whiteKakao.getItemOptions().get(0);
         ItemOption pinkNoneOption = pinkKakao.getItemOptions().get(0);
 
+        setItemOptionUsingReflection(blackNoneOption, 2L);
+        setItemOptionUsingReflection(whiteNoneOption, 3L);
+        setItemOptionUsingReflection(pinkNoneOption, 4L);
 
-        ItemOrderDetailDTO.Request blackKakaoDetailRequest = ItemOrderDetailDTO.Request.builder().itemId(1L).optionId(1L).stock(10L).build();
-        ItemOrderDetailDTO.Request blackNoneDetailRequest = ItemOrderDetailDTO.Request.builder().itemId(1L).optionId(2L).stock(20L).build();
-        ItemOrderDetailDTO.Request whiteNoneDetailRequest = ItemOrderDetailDTO.Request.builder().itemId(2L).optionId(3L).stock(30L).build();
-        ItemOrderDetailDTO.Request pinkNoneDetailRequest = ItemOrderDetailDTO.Request.builder().itemId(3L).optionId(4L).stock(40L).build();
+
+        ItemOrderDetailDTO.Request blackKakaoDetailRequest = ItemOrderDetailDTO.Request.builder().itemId(blackKakao.getId()).optionId(blackKakaoOption.getId()).stock(10L).build();
+        ItemOrderDetailDTO.Request blackNoneDetailRequest = ItemOrderDetailDTO.Request.builder().itemId(blackKakao.getId()).optionId(blackNoneOption.getId()).stock(20L).build();
+        ItemOrderDetailDTO.Request whiteNoneDetailRequest = ItemOrderDetailDTO.Request.builder().itemId(whiteKakao.getId()).optionId(whiteNoneOption.getId()).stock(30L).build();
+        ItemOrderDetailDTO.Request pinkNoneDetailRequest = ItemOrderDetailDTO.Request.builder().itemId(pinkKakao.getId()).optionId(pinkNoneOption.getId()).stock(40L).build();
 
         // when
         itemOrder.addOrderDetails(blackKakao, blackNoneOption, OrderStatus.COMPLETE, blackKakaoDetailRequest);
@@ -136,15 +142,18 @@ class ItemOrderServiceCancelTest {
 
         when(itemOptionRepository.findById(1L))
                 .thenReturn(Optional.of(blackKakaoOption));
-        when(itemOptionRepository.findById(2L))
+        when(itemOptionRepository.findById(blackNoneOption.getId()))
                 .thenReturn(Optional.of(blackNoneOption));
-        when(itemOptionRepository.findById(3L))
+        when(itemOptionRepository.findById(whiteNoneOption.getId()))
                 .thenReturn(Optional.of(whiteNoneOption));
-        when(itemOptionRepository.findById(4L))
+        when(itemOptionRepository.findById(pinkNoneOption.getId()))
                 .thenReturn(Optional.of(pinkNoneOption));
+        when(itemOrderRepository.findById(1L))
+                .thenReturn(Optional.of(itemOrder));
 
-        ItemOrderDetailDTO.Response cancelResponseId2 = itemOrder.cancelOrderDetail(2L);
-        ItemOrderDetailDTO.Response cancelResponseId4 = itemOrder.cancelOrderDetail(4L);
+        ItemOrderDetailDTO.Response cancelResponseId2 = itemOrderService.cancelDetail(ItemOrderDetailDTO.RequestCancel.builder().orderId(1L).detailId(2L).build());
+        itemOrderService.cancelDetail(ItemOrderDetailDTO.RequestCancel.builder().orderId(1L).detailId(4L).build());
+
         // then
         long itemTotalPayAmount = blackKakao.getPayAmount() + pinkKakao.getPayAmount() + whiteKakao.getPayAmount() + blackKakao.getPayAmount() + blackKakaoOption.getPremium();
         long itemTotalAmount = blackKakao.getAmount() + pinkKakao.getAmount() + whiteKakao.getAmount() + blackKakao.getAmount() + blackKakaoOption.getPremium();
@@ -221,6 +230,9 @@ class ItemOrderServiceCancelTest {
         ReflectionTestUtils.setField(itemOption, "id", id);
 
         return itemOption;
+    }
+    private void setItemOptionUsingReflection(ItemOption itemOption, long id) {
+        ReflectionTestUtils.setField(itemOption, "id", id);
     }
 
     @Bean

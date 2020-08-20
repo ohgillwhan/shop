@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +25,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@DataJpaTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class ItemOptionRepositoryTest {
     private final CategoryRepository categoryRepository;
@@ -40,28 +41,28 @@ class ItemOptionRepositoryTest {
         Category category = addTopCategory();
 
         ItemDTO.Request itemKakaoRequest = ItemDTO.Request.builder().name("Kakao").amount(1000L).discountAmount(100L).stock(1L).build();
-        Item itemKakao = Item.of(itemKakaoRequest, category);
 
-        Long kakaoId = itemRepository.save(itemKakao).getId();
+        Item itemKakao = itemRepository.save(Item.of(itemKakaoRequest, category));
 
         ItemOptionDTO.Request kakaoDarkOption = ItemOptionDTO.Request.builder().name("DARK").premium(10000L).build();
         ItemOptionDTO.Request kakaoWhiteOption = ItemOptionDTO.Request.builder().name("WHITE").premium(20000L).build();
 
         ItemOption itemDarkOption = ItemOption.of(kakaoDarkOption, itemKakao);
         ItemOption itemWhiteOption = ItemOption.of(kakaoWhiteOption, itemKakao);
-        // when
 
-        Long darkOption = itemOptionRepository.save(itemDarkOption).getId();
-        Long whiteOption = itemOptionRepository.save(itemWhiteOption).getId();
+        // when
+        ItemOption darkOption = itemOptionRepository.save(itemDarkOption);
+        ItemOption whiteOption = itemOptionRepository.save(itemWhiteOption);
 
         flush();
 
         Map<Long, ItemOptionDTO.Request> optionsMap = new HashMap<>();
-        optionsMap.put(darkOption, kakaoDarkOption);
-        optionsMap.put(whiteOption, kakaoWhiteOption);
+
+        optionsMap.put(darkOption.getId(), kakaoDarkOption);
+        optionsMap.put(whiteOption.getId(), kakaoWhiteOption);
 
         // then
-        optionsMap.entrySet().stream().forEach(entry -> {
+        for(Map.Entry<Long,ItemOptionDTO.Request> entry : optionsMap.entrySet()) {
             Long key = entry.getKey();
             ItemOptionDTO.Request value = entry.getValue();
 
@@ -72,13 +73,13 @@ class ItemOptionRepositoryTest {
                     .isEqualTo(value.getName());
 
             assertThat(itemOption.getPremium())
-                    .isGreaterThan(0L)
+                    .isPositive()
                     .isEqualTo(value.getPremium());
 
             assertThat(itemOption.getItem().getId())
                     .isNotNull()
                     .isEqualTo(itemKakao.getId());
-        });
+        }
     }
 
     private Category addTopCategory() {

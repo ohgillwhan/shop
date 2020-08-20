@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +26,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@DataJpaTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class ReviewRepositoryTest {
     private final ItemRepository itemRepository;
@@ -50,41 +51,41 @@ class ReviewRepositoryTest {
         Review normal = Review.of(normalRequest, item);
 
         // when
-        Long niceReviewId = reviewRepository.save(nice).getId();
-        Long badReviewId = reviewRepository.save(bad).getId();
-        Long normalReviewId = reviewRepository.save(normal).getId();
+        nice = reviewRepository.save(nice);
+        bad = reviewRepository.save(bad);
+        normal = reviewRepository.save(normal);
 
         flush();
 
         // then
         Map<Long, ReviewDTO.Request> itemMaps = new HashMap<>();
-        itemMaps.put(niceReviewId, niceRequest);
-        itemMaps.put(badReviewId, badRequest);
-        itemMaps.put(normalReviewId, normalRequest);
+        itemMaps.put(nice.getId(), niceRequest);
+        itemMaps.put(bad.getId(), badRequest);
+        itemMaps.put(normal.getId(), normalRequest);
 
-        itemMaps.entrySet().stream().forEach(entry -> {
+        for(Map.Entry<Long, ReviewDTO.Request> entry : itemMaps.entrySet()) {
             Long key = entry.getKey();
             ReviewDTO.Request value = entry.getValue();
 
-            Review byId = reviewRepository.findById(key).get();
+            Review review = reviewRepository.findById(key).get();
 
-            assertThat(byId.getId())
-                    .isGreaterThan(0L)
+            assertThat(review.getId())
+                    .isPositive()
                     .isEqualTo(key);
 
-            assertThat(byId.getContents())
+            assertThat(review.getContents())
                     .isNotEmpty()
                     .isEqualTo(value.getContents());
 
-            assertThat(byId.getItem().getId())
+            assertThat(review.getItem().getId())
                     .isNotNull()
                     .isEqualTo(item.getId());
 
-            assertThat(byId.getScore())
+            assertThat(review.getScore())
                     .isNotNull()
                     .isEqualTo(value.getScore());
 
-        });
+        }
     }
     private Category addTopCategory() {
         return categoryRepository.save(Category.of(CategoryDTO.Request.builder().name("TOP").build()));

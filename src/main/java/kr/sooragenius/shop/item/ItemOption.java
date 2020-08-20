@@ -14,6 +14,7 @@ public class ItemOption {
     private Long id;
     private String name;
     private Long premium;
+    private boolean noneOptionAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ITME_ID", referencedColumnName = "ITEM_ID")
@@ -32,7 +33,10 @@ public class ItemOption {
     }
     public static ItemOption createNoneOption(Item item, long stock) {
         ItemOptionDTO.Request request = new ItemOptionDTO.Request("None", 0L, stock);
-        return of(request, item);
+        ItemOption itemOption = of(request, item);
+        itemOption.noneOptionAt = true;
+
+        return itemOption;
     }
 
 

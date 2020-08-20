@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,7 +16,7 @@ import javax.persistence.EntityManager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@DataJpaTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class CategoryRepositoryTest {
     private final CategoryRepository categoryRepository;
@@ -27,21 +28,20 @@ class CategoryRepositoryTest {
     void saveTopCategory() {
         // given
         CategoryDTO.Request request = CategoryDTO.Request.builder().name("TOP").build();
-        Category top = Category.of(request);
 
         // when
-        top = categoryRepository.save(top);
-        Long id = top.getId();
+        Category top = categoryRepository.save(Category.of(request));
         flush();
 
-        Category byId = categoryRepository.findById(id).get();
+        top = categoryRepository.findById(top.getId()).get();
 
         // then
-        assertThat(byId.getId())
-                .isGreaterThan(0L)
-                .isEqualTo(byId.getParent().getId());
+        assertThat(top.getId())
+                .isPositive()
+                .isEqualTo(top.getParent().getId());
 
-        assertThat(byId.getName())
+        assertThat(top.getName())
+                .isNotEmpty()
                 .isEqualTo(top.getName());
     }
     @Test
@@ -50,25 +50,23 @@ class CategoryRepositoryTest {
     void addWithParent() {
         // given
         CategoryDTO.Request parentRequest = CategoryDTO.Request.builder().name("parent").build();
-        Category parent = Category.of(parentRequest);
-        parent = categoryRepository.save(parent);
-
         CategoryDTO.Request childRequest = CategoryDTO.Request.builder().name("TOP").build();
+
+        Category parent = categoryRepository.save(Category.of(parentRequest));
         Category child = Category.of(childRequest, parent);
 
         // when
         child = categoryRepository.save(child);
-        Long childId = child.getId();
         flush();
 
-        Category byId = categoryRepository.findById(childId).get();
+        child = categoryRepository.findById(child.getId()).get();
 
         // then
-        assertThat(byId.getId())
-                .isGreaterThan(0L);
+        assertThat(child.getId())
+                .isPositive();
 
-        assertThat(byId.getParent().getId())
-                .isGreaterThan(0L)
+        assertThat(child.getParent().getId())
+                .isPositive()
                 .isEqualTo(parent.getId());
     }
 

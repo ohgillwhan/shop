@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -41,7 +42,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@DataJpaTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class ItemOrderRepositoryTest {
     private final ItemOrderRepository itemOrderRepository;
@@ -63,10 +64,9 @@ class ItemOrderRepositoryTest {
         Category category = addTopCategory();
         Item item = addItem(category);
         Member member = addMember();
-        ItemOrder itemOrder = ItemOrder.of(member);
 
         // when
-        itemOrder = itemOrderRepository.save(itemOrder);
+        ItemOrder itemOrder = itemOrderRepository.save(ItemOrder.of(member));
 
         List<ItemOrderDetail> itemOrderDetails = Arrays.asList(
                 createItemOrderDetail(item, null, itemOrder),
@@ -75,19 +75,16 @@ class ItemOrderRepositoryTest {
         );
         ReflectionTestUtils.setField(itemOrder, "itemOrderDetails", itemOrderDetails);
         flush();
+
         itemOrder = itemOrderRepository.findById(itemOrder.getId()).get();
 
         // then
-        assertThat(member.getId())
-                .isNotEmpty()
-                .isEqualTo(itemOrder.getMember().getId());
-
         assertThat(itemOrder.getMember().getId())
                 .isNotEmpty()
                 .isEqualTo(member.getId());
 
         assertThat(itemOrder.getItemOrderDetails().size())
-                .isGreaterThan(0)
+                .isPositive()
                 .isEqualTo(itemOrderDetails.size());
 
         // 함수를 통해 save를 한것이 아니라서 0원

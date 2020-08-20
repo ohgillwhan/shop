@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@DataJpaTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class BasketItemRepositoryTest {
     private final BasketRepository basketRepository;
@@ -48,29 +49,25 @@ class BasketItemRepositoryTest {
     public void addBasketItem() {
         // given
         Basket basket = addBasket();
-        Category category = addTopCategory();
+        Category category = addCategory();
 
         ItemDTO.Request itemKakaoRequest = ItemDTO.Request.builder().name("Kakao").amount(1000L).discountAmount(100L).stock(0L).build();
         ItemDTO.Request itemClockRequest = ItemDTO.Request.builder().name("Clock").amount(1000L).discountAmount(100L).stock(0L).build();
-        ItemDTO.Request itemPenRequest = ItemDTO.Request.builder().name("Pen").amount(1000L).discountAmount(100L).stock(0L).build();
 
         Item kakao = itemRepository.save(Item.of(itemKakaoRequest, category));
         Item clock = itemRepository.save(Item.of(itemClockRequest, category));
-        Item pen = itemRepository.save(Item.of(itemPenRequest, category));
 
         // when
         BasketItem kakaoBasketItem = basketItemRepository.save(BasketItem.of(basket, kakao));
         BasketItem clockBasketItem = basketItemRepository.save(BasketItem.of(basket, clock));
-        BasketItem penBasketItem = basketItemRepository.save(BasketItem.of(basket, pen));
         flush();
 
         Map<Long, Long> basketItemIdToItemId = new HashMap<>();
         basketItemIdToItemId.put(kakaoBasketItem.getId(), kakao.getId());
         basketItemIdToItemId.put(clockBasketItem.getId(), clock.getId());
-        basketItemIdToItemId.put(penBasketItem.getId(), pen.getId());
 
         // then
-        basketItemIdToItemId.entrySet().stream().forEach(entry -> {
+        for(Map.Entry<Long,Long> entry : basketItemIdToItemId.entrySet()) {
             Long basketItemId = entry.getKey();
             Long itemId = entry.getValue();
 
@@ -78,12 +75,12 @@ class BasketItemRepositoryTest {
             Item item = itemRepository.findById(itemId).get();
 
             assertThat(basket.getId())
-                    .isGreaterThan(0L)
+                    .isPositive()
                     .isEqualTo(basketItem.getBasket().getId());
             assertThat(item.getId())
-                    .isGreaterThan(0L)
+                    .isPositive()
                     .isEqualTo(basketItem.getItem().getId());
-        });
+        }
     }
 
     private Member addMember() {
@@ -98,7 +95,7 @@ class BasketItemRepositoryTest {
 
         return save;
     }
-    private Category addTopCategory() {
+    private Category addCategory() {
         return categoryRepository.save(Category.of(CategoryDTO.Request.builder().name("TOP").build()));
     }
     private void flush() {

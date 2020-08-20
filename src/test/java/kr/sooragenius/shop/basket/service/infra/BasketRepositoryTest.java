@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,18 +21,15 @@ import javax.persistence.EntityManager;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@DataJpaTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class BasketRepositoryTest {
     private final BasketRepository basketRepository;
     private final MemberRepository memberRepository;
     private final EntityManager entityManager;
-    private final PasswordEncoder passwordEncoder;
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-         return new BCryptPasswordEncoder();
-    }
+
+
 
     @Test
     @Transactional
@@ -40,27 +38,28 @@ class BasketRepositoryTest {
         // given
         Member member = addMember();
         // when
-        Basket save = basketRepository.save(Basket.of(member));
-        Long basketId = save.getId();
+        Basket basket = basketRepository.save(Basket.of(member));
         flush();
 
-        Basket byId = basketRepository.findById(basketId).get();
+        basket = basketRepository.findById(basket.getId()).get();
         // then
-        assertThat(byId.getId())
-                .isGreaterThan(0);
-        assertThat(byId.getMember().getId())
+        assertThat(basket.getId())
+                .isPositive();
+        assertThat(basket.getMember().getId())
                 .isNotEmpty()
                 .isEqualTo(member.getId());
     }
 
-
-    public Member addMember() {
+    private PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+    private Member addMember() {
         MemberDTO.Request request = MemberDTO.Request.builder().authority(MemberAuthority.ROLE_ADMIN).id("A1").name("A1").password("A1").build();
 
-        Member save = memberRepository.save(Member.of(request, passwordEncoder));
+        Member save = memberRepository.save(Member.of(request, passwordEncoder()));
         return save;
     }
-    public void flush() {
+    private void flush() {
         entityManager.flush();
         entityManager.clear();
     }
