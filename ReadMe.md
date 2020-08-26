@@ -125,3 +125,16 @@ EventPublish는 어떻게 테스트할건가..?
 1. 상품 주문시 redis로 재고관리
 2. 상품 주문 TPS 측정 
 3. 13일차 작성
+
+## 회고
+좋지못한일이 8월23일날 있었다.  
+그로인해 커밋을 잘 하지못했다.  
+
+아래는 TPS 측정이다.
+
+![캐시 tps 측정](images/cache-tps.png)
+![캐시 동시성](images/cache-동시성.png)
+
+# 13일차
+1. 상품 재고 차감 후 rollback시 재고도 rollback
+2. 14일차 작성

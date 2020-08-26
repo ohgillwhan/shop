@@ -8,7 +8,8 @@ import javax.persistence.*;
 
 @Entity
 @Getter
-public class ItemOption {
+public class
+ItemOption {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ITEM_OPTION_ID")
     private Long id;
