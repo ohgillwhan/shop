@@ -15,6 +15,8 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,10 +41,18 @@ public class ItemOrderEventListener {
 
         if(execute.equals("fail")) throw new RuntimeException("재고가 부족합니다.");
     }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
+    public void cancelEvent(ItemOrderEventDTO.NewItemOrderRollback newItemOrder) {
+
+        DefaultRedisScript<String> holdScript = new DefaultRedisScript<>();
+        holdScript.setLocation(new ClassPathResource("luascript/item/option/increaseStock.lua"));
+        holdScript.setResultType(String.class);
+
+
+        List<String> keys = Arrays.asList(String.format("item::%d::%d::stock", newItemOrder.getItemId(), newItemOrder.getOptionId()));
+        List<String> values = Arrays.asList(String.valueOf(newItemOrder.getStock()));
 //
-//    @EventListener
-//    public void cancelEvent(ItemOrderEventDTO.ItemCancel itemCancel) {
-//        ItemOptionDTO.StockUpdate stockUpdate = new ItemOptionDTO.StockUpdate(itemCancel.getOptionId(), itemCancel.getStock());
-//        itemOptionService.plusStockById(stockUpdate);
-//    }
+        String execute = (String) redisTemplate.execute(holdScript, keys, values.toArray());
+    }
 }

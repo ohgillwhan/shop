@@ -41,6 +41,7 @@ public class ItemOrderService {
         ItemOrder itemOrder = ItemOrder.of(member);
 
         for(ItemOrderDetailDTO.Request detailRequest : request.getOrderDetailRequests()) {
+
             Item item = itemRepository.findById(detailRequest.getItemId()).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다"));
 
             ItemOption itemOption = null;
@@ -50,11 +51,13 @@ public class ItemOrderService {
             }
 
             applicationEventPublisher.publishEvent(ItemOrderEventDTO.NewItemOrder.of(detailRequest));
+            applicationEventPublisher.publishEvent(ItemOrderEventDTO.NewItemOrderRollback.of(detailRequest));
 
             itemOrder.addOrderDetails(item, itemOption, detailRequest.getOrderStatus(), detailRequest);
         };
 
         itemOrderRepository.save(itemOrder);
+        if(1 == 1) throw new RuntimeException("Helo");
 
         return ItemOrderDTO.Response.of(itemOrder, itemOrder.getItemOrderDetails());
     }
@@ -66,6 +69,7 @@ public class ItemOrderService {
         ItemOrderDetailDTO.Response cancelResponse = itemOrder.cancelOrderDetail(request.getDetailId());
 
         applicationEventPublisher.publishEvent(ItemOrderEventDTO.ItemCancel.of(cancelResponse));
+
 
         return cancelResponse;
     }

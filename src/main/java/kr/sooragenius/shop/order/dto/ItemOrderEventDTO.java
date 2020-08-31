@@ -27,6 +27,24 @@ public class ItemOrderEventDTO {
 
     @Data
     @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class NewItemOrderRollback {
+        private long itemId;
+        private long optionId;
+        private long stock;
+
+        public static NewItemOrderRollback of(ItemOrderDetailDTO.Request detailRequest) {
+            NewItemOrderRollback newItemOrder = new NewItemOrderRollback();
+            newItemOrder.itemId = detailRequest.getItemId();
+            newItemOrder.optionId = detailRequest.getOptionId();
+            newItemOrder.stock = detailRequest.getStock();
+
+            return newItemOrder;
+        }
+
+    }
+
+    @Data
+    @Builder @NoArgsConstructor @AllArgsConstructor
     public static class ItemCancel {
         private long itemId;
         private long optionId;
