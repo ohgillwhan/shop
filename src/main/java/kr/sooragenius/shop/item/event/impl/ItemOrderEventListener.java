@@ -7,6 +7,7 @@ import kr.sooragenius.shop.item.service.ItemService;
 import kr.sooragenius.shop.order.dto.ItemOrderEventDTO;
 import kr.sooragenius.shop.order.service.ItemOrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ItemOrderEventListener {
     private final RedisTemplate redisTemplate;
+    private final ApplicationEventPublisher applicationEventPublisher;
     @EventListener
     public void itemOrderEvent(ItemOrderEventDTO.NewItemOrder newItemOrder) throws RuntimeException{
 
@@ -38,6 +40,8 @@ public class ItemOrderEventListener {
         List<String> values = Arrays.asList(String.valueOf(newItemOrder.getStock()));
 //
         String execute = (String) redisTemplate.execute(holdScript, keys, values.toArray());
+
+        applicationEventPublisher.publishEvent(ItemOrderEventDTO.NewItemOrderRollback.of(newItemOrder));
 
         if(execute.equals("fail")) throw new RuntimeException("재고가 부족합니다.");
     }

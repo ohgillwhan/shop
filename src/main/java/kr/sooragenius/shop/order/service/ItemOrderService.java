@@ -51,7 +51,6 @@ public class ItemOrderService {
             }
 
             applicationEventPublisher.publishEvent(ItemOrderEventDTO.NewItemOrder.of(detailRequest));
-            applicationEventPublisher.publishEvent(ItemOrderEventDTO.NewItemOrderRollback.of(detailRequest));
 
             itemOrder.addOrderDetails(item, itemOption, detailRequest.getOrderStatus(), detailRequest);
         };

@@ -32,7 +32,7 @@ public class ItemOrderEventDTO {
         private long optionId;
         private long stock;
 
-        public static NewItemOrderRollback of(ItemOrderDetailDTO.Request detailRequest) {
+        public static NewItemOrderRollback of(NewItemOrder detailRequest) {
             NewItemOrderRollback newItemOrder = new NewItemOrderRollback();
             newItemOrder.itemId = detailRequest.getItemId();
             newItemOrder.optionId = detailRequest.getOptionId();
