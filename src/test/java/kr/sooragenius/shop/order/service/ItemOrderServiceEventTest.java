@@ -3,6 +3,7 @@ package kr.sooragenius.shop.order.service;
 import kr.sooragenius.shop.category.Category;
 import kr.sooragenius.shop.category.dto.CategoryDTO;
 import kr.sooragenius.shop.category.service.infra.CategoryRepository;
+import kr.sooragenius.shop.config.EmbededRedisTestConfiguration;
 import kr.sooragenius.shop.item.Item;
 import kr.sooragenius.shop.item.ItemOption;
 import kr.sooragenius.shop.item.dto.ItemDTO;
@@ -31,6 +32,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -49,7 +53,9 @@ import static org.mockito.ArgumentMatchers.anyLong;
 
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor_= @Autowired)
+@Import(EmbededRedisTestConfiguration.class)
 public class ItemOrderServiceEventTest {
+    private static String REDIS_STOCK_KEY = "item::%d::%d::stock";
     private final CategoryRepository categoryRepository;
     private final ItemRepository itemRepository;
     private final ItemOrderRepository itemOrderRepository;
@@ -58,6 +64,7 @@ public class ItemOrderServiceEventTest {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final PasswordEncoder passwordEncoder;
     private final EntityManager entityManager;
+    private final RedisTemplate redisTemplate;
 
 
     private final ItemOrderService itemOrderService;
@@ -122,8 +129,8 @@ public class ItemOrderServiceEventTest {
 
         ItemOption itemOption = itemOptionRepository.findById(item.getNoneOptionId()).get();
         // then
-        assertThat(itemOption.getStock())
-                .isEqualTo(0L);
+        assertThat(redisTemplate.opsForValue().get(String.format(REDIS_STOCK_KEY, item.getId(), item.getNoneOptionId())))
+                .isEqualTo("0");
 
     }
     @Test
@@ -227,7 +234,12 @@ public class ItemOrderServiceEventTest {
                 .deliveryDescription("무료배송")
                 .stock(1L)
                 .build();
-        return itemRepository.save(Item.of(build, category));
+
+        Item save = itemRepository.save(Item.of(build, category));
+
+        // 재고셋팅
+        redisTemplate.opsForValue().set(String.format(REDIS_STOCK_KEY, save.getId(), save.getNoneOptionId()), build.getStock().toString());
+        return save;
     }
     private Member addMember() {
         MemberDTO.Request request = MemberDTO.Request.builder().authority(MemberAuthority.ROLE_ADMIN).id("A1").name("A1").password("A1").build();
@@ -244,7 +256,6 @@ public class ItemOrderServiceEventTest {
         return itemOrderDetail;
     }
 
-    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }

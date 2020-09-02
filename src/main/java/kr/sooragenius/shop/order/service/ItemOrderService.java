@@ -56,7 +56,6 @@ public class ItemOrderService {
         };
 
         itemOrderRepository.save(itemOrder);
-        if(1 == 1) throw new RuntimeException("Helo");
 
         return ItemOrderDTO.Response.of(itemOrder, itemOrder.getItemOrderDetails());
     }
