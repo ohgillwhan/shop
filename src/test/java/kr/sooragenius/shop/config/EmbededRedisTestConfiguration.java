@@ -8,12 +8,14 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.kafka.annotation.EnableKafka;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 
 @TestConfiguration
+@EnableKafka
 public class EmbededRedisTestConfiguration {
     private final RedisProperties redisProperties;
     private final redis.embedded.RedisServer redisServer;
