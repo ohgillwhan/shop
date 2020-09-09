@@ -1,5 +1,6 @@
 package kr.sooragenius.shop.config;
 
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -47,8 +48,8 @@ public class KafkaConfiguration {
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
-    @KafkaListener(topics = {"ItemOrder"}, groupId = "Test")
-    public void listen(String str) {
-        System.out.println(str);
+    @Bean
+    public NewTopic topic() {
+        return new NewTopic("ItemOrderTopic2", 100, (short)1);
     }
 }

@@ -5,21 +5,34 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.context.ApplicationEvent;
+
+import java.io.Serializable;
 
 public class ItemOrderEventDTO {
     @Data
     @Builder @NoArgsConstructor @AllArgsConstructor
-    public static class NewItemOrder {
+    public static class NewItemOrderDetail {
         private long itemId;
         private long optionId;
         private long stock;
 
         public static Object of(ItemOrderDetailDTO.Request detailRequest) {
+            NewItemOrderDetail newItemOrderDetail = new NewItemOrderDetail();
+            newItemOrderDetail.itemId = detailRequest.getItemId();
+            newItemOrderDetail.optionId = detailRequest.getOptionId();
+            newItemOrderDetail.stock = detailRequest.getStock();
+
+            return newItemOrderDetail;
+        }
+    }
+    @Data
+    @Builder @NoArgsConstructor @AllArgsConstructor
+    public static class NewItemOrder  implements Serializable {
+        private long orderId;
+
+        public static NewItemOrder of(ItemOrder itemOrder) {
             NewItemOrder newItemOrder = new NewItemOrder();
-            newItemOrder.itemId = detailRequest.getItemId();
-            newItemOrder.optionId = detailRequest.getOptionId();
-            newItemOrder.stock = detailRequest.getStock();
+            newItemOrder.orderId = itemOrder.getId();
 
             return newItemOrder;
         }
@@ -32,7 +45,7 @@ public class ItemOrderEventDTO {
         private long optionId;
         private long stock;
 
-        public static NewItemOrderRollback of(NewItemOrder detailRequest) {
+        public static NewItemOrderRollback of(NewItemOrderDetail detailRequest) {
             NewItemOrderRollback newItemOrder = new NewItemOrderRollback();
             newItemOrder.itemId = detailRequest.getItemId();
             newItemOrder.optionId = detailRequest.getOptionId();

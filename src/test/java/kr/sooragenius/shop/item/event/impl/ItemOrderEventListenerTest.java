@@ -3,7 +3,6 @@ package kr.sooragenius.shop.item.event.impl;
 import kr.sooragenius.shop.config.EmbededRedisTestConfiguration;
 import kr.sooragenius.shop.order.dto.ItemOrderEventDTO;
 import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,7 +16,6 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @Import(EmbededRedisTestConfiguration.class)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -46,7 +44,7 @@ class ItemOrderEventListenerTest {
         ValueOperations valueOperations = redisTemplate.opsForValue();
         valueOperations.set(REDIS_STOCK_KEY, "1");
 
-        ItemOrderEventDTO.NewItemOrder build = ItemOrderEventDTO.NewItemOrder.builder().itemId(1L).optionId(2L).stock(1).build();
+        ItemOrderEventDTO.NewItemOrderDetail build = ItemOrderEventDTO.NewItemOrderDetail.builder().itemId(1L).optionId(2L).stock(1).build();
 
         // then
         assertThatExceptionOfType(RuntimeException.class)
@@ -60,7 +58,7 @@ class ItemOrderEventListenerTest {
         ValueOperations valueOperations = redisTemplate.opsForValue();
         valueOperations.set(REDIS_STOCK_KEY, "1");
 
-        ItemOrderEventDTO.NewItemOrder build = ItemOrderEventDTO.NewItemOrder.builder().itemId(1L).optionId(1L).stock(1).build();
+        ItemOrderEventDTO.NewItemOrderDetail build = ItemOrderEventDTO.NewItemOrderDetail.builder().itemId(1L).optionId(1L).stock(1).build();
 
         // when
         orderEventListener.itemOrderEvent(build);

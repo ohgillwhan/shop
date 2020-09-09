@@ -170,4 +170,10 @@ https://stackoverflow.com/questions/50895344/spring-kafka-and-number-of-topic-co
 # 16일차
 1. 다른 서브 프로젝트에서 Kafka에서 Consume해와서 N초뒤에 랜덤적으로 결제완료 / 결제불가로 변경
 2. 17일차 작성
-  
+ 
+## 회고
+topic 제어하는 명령어를 좀 공부해야겠다...
+
+# 17일차
+1. Topic 제어명령어 공부
+2. 18일차 작성
