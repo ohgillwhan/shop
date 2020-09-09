@@ -50,6 +50,7 @@ public class ItemOrder {
         ItemOrderDetail itemOrderDetail = findById(detailId);
         if(itemOrderDetail == null) {
             throw new IllegalArgumentException("존재하지 않는 상세정보 입니다.");
+
         }
 
         totalAmount -= itemOrderDetail.getAmount();
