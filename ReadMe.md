@@ -221,3 +221,21 @@ bin/zookeeper-server-stop.sh config/zookeeper.properties
 ## server log check
 cat /usr/local/bin/kafka/logs/server.log 
 ```
+
+# 18일차
+1. 로컬에 elk 설치
+2. 19일차 작성
+
+## 회고
+간단히 도커로 뛰었다
+docker run -p 5601:5601 -p 9200:9200 -p 5044:5044 -it --name elk sebp/elk
+
+### 포트
+- 5601 : kinana
+- 9200 : elastic search
+- 5044 : logstash (beats)
+
+# 19일차
+1. kafka 를 beat로 연결하여 logstash에저장
+2. 단순히 저장한 데이터 kibana 표출
+3. 20일차 작성
